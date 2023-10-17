@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>ToDo List</title>
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>To-Do List</h1>
+      <div id="task-input">
+        <input type="text" id="new-task" placeholder="Add a new task" />
+        <select id="priority">
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+        <button id="add-task-button">Add Task</button>
+      </div>
+      <div id="task-input">
+        <button onclick="filterTasks('all')">All</button>
+        <button onclick="filterTasks('pending')">Pending</button>
+        <button onclick="filterTasks('completed')">Completed</button>
+      </div>
+      <div id="task-list"></div>
+    </div>
+    <script>
+      let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+
+      function renderTasks(filteredTasks) {
+        const taskList = document.getElementById("task-list");
+        taskList.innerHTML = "";
+
+        for (let i = 0; i < filteredTasks.length; i++) {
+          const task = filteredTasks[i];
+          const taskItem = document.createElement("div");
+          taskItem.className = `task ${
+            task.completed ? "completed" : ""
+          } priority-${task.priority}`;
+          taskItem.innerHTML = `${task.text}
+        <span>
+            <button onclick="toggleTaskStatus(${i})">${
+            task.completed ? "Undo" : "Done"
+          }</button>
+            <button onclick="editTask(${i})">Edit</button>
+            <button onclick="deleteTask(${i})">Delete</button>
+        </span>`;
+          taskList.appendChild(taskItem);
+        }
+      }
+
+      function addTask() {
+        const newTaskText = document.getElementById("new-task").value;
+        const priority = document.getElementById("priority").value;
+
+        if (newTaskText) {
+          tasks.push({
+            text: newTaskText,
+            priority: priority,
+            completed: false,
+          });
+          localStorage.setItem("tasks", JSON.stringify(tasks));
+          document.getElementById("new-task").value = "";
+          filterTasks("all");
+        }
+      }
+
+      function toggleTaskStatus(index) {
+        tasks[index].completed = !tasks[index].completed;
+        localStorage.setItem("tasks", JSON.stringify(tasks));
+        filterTasks("all");
+      }
+
+      function editTask(index) {
+        const updatedTaskText = prompt("Edit the task:", tasks[index].text);
+        if (updatedTaskText !== null) {
+          tasks[index].text = updatedTaskText;
+          localStorage.setItem("tasks", JSON.stringify(tasks));
+          filterTasks("all");
+        }
+      }
+
+      function deleteTask(index) {
+        tasks.splice(index, 1);
+        localStorage.setItem("tasks", JSON.stringify(tasks));
+        filterTasks("all");
+      }
+
+      function filterTasks(filter) {
+        let filteredTasks;
+        if (filter === "pending") {
+          filteredTasks = tasks.filter((task) => !task.completed);
+        } else if (filter === "completed") {
+          filteredTasks = tasks.filter((task) => task.completed);
+        } else {
+          filteredTasks = tasks;
+        }
+        renderTasks(filteredTasks);
+      }
+
+      filterTasks("all");
+
+      document
+        .getElementById("add-task-button")
+        .addEventListener("click", addTask);
+      document
+        .getElementById("new-task")
+        .addEventListener("keyup", function (event) {
+          if (event.key === "Enter") {
+            addTask();
+          }
+        });
+
+      renderTasks(tasks);
+    </script>
+  </body>
+</html>
